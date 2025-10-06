@@ -39,5 +39,7 @@ app.post("/api/sessions", (req, res) => {
   sessions.push(newSession);
   res.status(201).json(newSession);
 });
-
+app.get('/', (req, res) => {
+  res.send('Welcome! Backend is running at /api/test and /api/sessions');
+});
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
