@@ -1,0 +1,30 @@
+[
+  {
+    "id": "c65f4b09-71cf-4d51-aebc-3bc22c64f945",
+    "title": "caroom",
+    "description": "",
+    "date": "2025-10-13",
+    "time": "05:18",
+    "maxParticipants": 10,
+    "sessionType": "public",
+    "participants": [
+      {
+        "attendanceCode": "a20512b1-9501-48b3-8caf-5ce77d4fb295"
+      }
+    ],
+    "managementCode": "c6b4c7f4-6aa9-4fc0-80df-70a3dda9d4ad",
+    "createdAt": "2025-10-06T23:14:48.017Z"
+  },
+  {
+    "id": "744a75a9-111b-4d73-8cc4-9d79c0e97b22",
+    "title": "chess",
+    "description": "small group",
+    "date": "2025-10-13",
+    "time": "08:15",
+    "maxParticipants": 4,
+    "sessionType": "private",
+    "participants": [],
+    "managementCode": "69ffd15c-bf86-4047-be95-ea35643a009f",
+    "createdAt": "2025-10-06T23:15:55.151Z"
+  }
+]

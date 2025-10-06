@@ -1,133 +1,157 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+// --- SessionDetails.jsx ---
+// View session details, join/leave attendance, and creator management
 
-const API = import.meta.env.VITE_API_URL;
+import React, { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function SessionDetails() {
   const { id } = useParams();
   const [session, setSession] = useState(null);
-  const [attendanceCode, setAttendanceCode] = useState(null);
-  const [name, setName] = useState('');
-  const [managementCode, setManagementCode] = useState('');
-  const [manageView, setManageView] = useState(null);
+  const [attendanceCode, setAttendanceCode] = useState(
+    localStorage.getItem(`attendance_${id}`) || ""
+  );
+  const [managementCode, setManagementCode] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  // Load session details
+  async function loadSession() {
+    const res = await fetch(`${API}/session/${id}`);
+    const data = await res.json();
+    setSession(data);
+    setLoading(false);
+  }
 
   useEffect(() => {
-    fetch(API + '/sessions/' + id).then(r => r.json()).then(setSession);
+    loadSession();
   }, [id]);
 
-  async function join() {
-    const res = await fetch(`${API}/sessions/${id}/join`, {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify({ name })
+  // Join session
+  async function joinSession() {
+    try {
+      const res = await fetch(`${API}/session/${id}/attend`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAttendanceCode(data.attendanceCode);
+        localStorage.setItem(`attendance_${id}`, data.attendanceCode);
+        alert("✅ You joined the session! Keep your attendance code safe.");
+        loadSession();
+      } else {
+        alert("❌ " + (data.message || "Could not join."));
+      }
+    } catch {
+      alert("❌ Failed to connect to server.");
+    }
+  }
+
+  // Leave session
+  async function leaveSession() {
+    const code = attendanceCode || localStorage.getItem(`attendance_${id}`);
+    if (!code) return alert("No attendance code found for this session.");
+
+    const res = await fetch(`${API}/session/${id}/leave`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ attendanceCode: code }),
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      alert("🚪 You left the session.");
+      localStorage.removeItem(`attendance_${id}`);
+      setAttendanceCode("");
+      loadSession();
+    } else {
+      alert("❌ " + (data.message || "Unable to leave."));
+    }
+  }
+
+  // Remove participant (creator)
+  async function removeParticipant(code) {
+    if (!managementCode) return alert("Enter management code first.");
+    const res = await fetch(`${API}/session/${id}/manage/remove`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: managementCode, attendanceCode: code }),
     });
     const data = await res.json();
-    if (data.attendanceCode) {
-      setAttendanceCode(data.attendanceCode);
-      alert('Joined! Keep your attendance code to unjoin.');
-      localStorage.setItem(`attendance_${id}`, data.attendanceCode);
+    if (res.ok) {
+      alert("✅ Participant removed.");
+      loadSession();
     } else {
-      alert('Error: ' + (data.error || 'unknown'));
+      alert("❌ " + (data.message || "Error removing participant."));
     }
-    const s = await (await fetch(API + '/sessions/' + id)).json();
-    setSession(s);
   }
 
-  async function unjoinWithSavedCode() {
-    const code = localStorage.getItem(`attendance_${id}`);
-    if (!code) return alert('No saved attendance code for this session.');
-    await fetch(`${API}/sessions/${id}/unjoin`, {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify({ attendanceCode: code })
-    });
-    localStorage.removeItem(`attendance_${id}`);
-    setAttendanceCode(null);
-    const s = await (await fetch(API + '/sessions/' + id)).json();
-    setSession(s);
-    alert('Removed attendance.');
-  }
-
-  async function loadManage() {
-    const r = await fetch(`${API}/sessions/${id}/manage?code=${managementCode}`);
-    if (r.status !== 200) {
-      const err = await r.json().catch(()=>({error:'unknown'}));
-      return alert('Manager access failed: ' + (err.error || r.status));
-    }
-    setManageView(await r.json());
-  }
-
-  async function creatorRemove(attCode) {
-    if (!managementCode) return alert('You need to enter management code.');
-    await fetch(`${API}/sessions/${id}/manage/remove-attendee`, {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify({ managementCode, attendanceCode: attCode })
-    });
-    alert('Removed attendee.');
-    loadManage();
-    const s = await (await fetch(API + '/sessions/' + id)).json();
-    setSession(s);
-  }
-
-  if (!session) return <div>Loading...</div>;
+  if (loading) return <div>Loading session...</div>;
+  if (!session) return <div>Session not found.</div>;
 
   return (
-    <div>
+    <div className="container mt-4">
       <h2>{session.title}</h2>
-      <div>{session.date} {session.time}</div>
-      <div>{session.description}</div>
-      <div>Attending: {session.attendeesCount}</div>
+      <p>{session.description}</p>
+      <p>
+        <strong>Date:</strong> {session.date} <br />
+        <strong>Time:</strong> {session.time}
+      </p>
+      <p>
+        <strong>Participants:</strong>{" "}
+        {session.participants?.length || 0} / {session.maxParticipants || "∞"}
+      </p>
 
-      <h3>Join</h3>
-      <div>
-        <input placeholder="Your name (optional)" value={name} onChange={e=>setName(e.target.value)} />
-        <button onClick={join}>I'm going</button>
-        <div>
-          <button onClick={unjoinWithSavedCode}>Not going (use saved code)</button>
-        </div>
+      <hr />
+      <h4>Join / Leave</h4>
+      {!attendanceCode ? (
+        <button className="btn btn-success me-2" onClick={joinSession}>
+          I’m going
+        </button>
+      ) : (
+        <button className="btn btn-danger me-2" onClick={leaveSession}>
+          Not going
+        </button>
+      )}
+
+      <hr />
+      <h4>Creator Management</h4>
+      <div className="mb-2">
+        <input
+          className="form-control"
+          placeholder="Enter management code"
+          value={managementCode}
+          onChange={(e) => setManagementCode(e.target.value)}
+        />
       </div>
 
-      <h3>Creator management</h3>
-      <div>
-        <input placeholder="Management code" value={managementCode} onChange={e=>setManagementCode(e.target.value)} />
-        <button onClick={loadManage}>Load management view</button>
-      </div>
-
-      {manageView && (
-        <div style={{ marginTop: 12, padding: 12, border: '1px solid #ccc' }}>
-          <h4>Manage: Attendees</h4>
-          <ul>
-            {manageView.attendees.map(a => (
-              <li key={a.code}>
-                {a.name || 'Anonymous'} — code: <code>{a.code}</code>
-                <button style={{ marginLeft: 8 }} onClick={()=>creatorRemove(a.code)}>Remove</button>
+      {managementCode && (
+        <>
+          <p>Use the code to manage participants below:</p>
+          <ul className="list-group">
+            {session.participants?.map((p) => (
+              <li
+                key={p.attendanceCode}
+                className="list-group-item d-flex justify-content-between align-items-center"
+              >
+                <span>{p.attendanceCode}</span>
+                <button
+                  className="btn btn-sm btn-outline-danger"
+                  onClick={() => removeParticipant(p.attendanceCode)}
+                >
+                  Remove
+                </button>
               </li>
             ))}
           </ul>
-          <h4>Session actions</h4>
-          <button onClick={async ()=>{
-            const newTitle = prompt('New title', manageView.title);
-            if (!newTitle) return;
-            await fetch(`${API}/sessions/${id}/manage?code=${managementCode}`, {
-              method: 'PUT',
-              headers: { 'Content-Type':'application/json' },
-              body: JSON.stringify({ title: newTitle })
-            });
-            alert('Updated');
-            loadManage();
-          }}>Edit title</button>
-          <button onClick={async ()=>{
-            if (!confirm('Delete session? This cannot be undone.')) return;
-            await fetch(`${API}/sessions/${id}/manage?code=${managementCode}`, { method: 'DELETE' });
-            alert('Deleted. Going back to list.');
-            window.location.href = '/';
-          }}>Delete session</button>
-        </div>
+        </>
       )}
 
-      <div style={{ marginTop: 20 }}>
-        <Link to="/">Back to list</Link>
+      <div className="mt-3">
+        <Link to="/" className="btn btn-secondary">
+          ← Back to list
+        </Link>
       </div>
     </div>
   );

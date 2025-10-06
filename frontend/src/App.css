@@ -55,3 +55,29 @@ button:hover, .btn:hover {
   background: #ff4757;
   transform: scale(1.05);
 }
+/* Navigation bar */
+.navbar {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.navbar a {
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  transition: all 0.3s ease;
+}
+
+.navbar a:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.navbar a.active {
+  background: #ff6b6b;
+}

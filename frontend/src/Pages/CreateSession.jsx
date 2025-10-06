@@ -1,51 +1,130 @@
-import React, { useState } from 'react';
+// --- CreateSession.jsx ---
+// Form to create a new session (public/private) and show management info
 
-const API = import.meta.env.VITE_API_URL;
+import React, { useState } from "react";
+
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function CreateSession() {
   const [form, setForm] = useState({
-    title: '', description: '', date: '', time: '',
-    maxParticipants: 10, sessionType: 'public',
-    location: '', creatorEmail: ''
+    title: "",
+    description: "",
+    date: "",
+    time: "",
+    maxParticipants: 10,
+    sessionType: "public",
   });
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
-  function onSubmit(e) {
+  async function onSubmit(e) {
     e.preventDefault();
-    fetch(API + '/sessions', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify(form)
-    }).then(r => r.json()).then(setResult);
+    setError(null);
+    setResult(null);
+
+    try {
+      const res = await fetch(`${API}/session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error creating session");
+      setResult(data);
+    } catch (err) {
+      setError(err.message);
+    }
   }
 
   return (
-    <div>
+    <div className="container mt-4">
       <h2>Create Session</h2>
-      <form onSubmit={onSubmit}>
-        <div><input placeholder="Title" value={form.title} onChange={e=>setForm({...form, title:e.target.value})} required/></div>
-        <div><textarea placeholder="Description" value={form.description} onChange={e=>setForm({...form, description:e.target.value})} /></div>
-        <div><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} required/></div>
-        <div><input type="time" value={form.time} onChange={e=>setForm({...form, time:e.target.value})} required/></div>
-        <div><input type="number" min="1" value={form.maxParticipants} onChange={e=>setForm({...form, maxParticipants:Number(e.target.value)})} required/></div>
-        <div>
-          <select value={form.sessionType} onChange={e=>setForm({...form, sessionType:e.target.value})}>
+      <form onSubmit={onSubmit} className="mt-3">
+        <div className="mb-2">
+          <input
+            className="form-control"
+            placeholder="Title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            required
+          />
+        </div>
+        <div className="mb-2">
+          <textarea
+            className="form-control"
+            placeholder="Description"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+        </div>
+        <div className="row mb-2">
+          <div className="col">
+            <input
+              type="date"
+              className="form-control"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              required
+            />
+          </div>
+          <div className="col">
+            <input
+              type="time"
+              className="form-control"
+              value={form.time}
+              onChange={(e) => setForm({ ...form, time: e.target.value })}
+              required
+            />
+          </div>
+        </div>
+        <div className="mb-2">
+          <input
+            type="number"
+            className="form-control"
+            min="1"
+            value={form.maxParticipants}
+            onChange={(e) =>
+              setForm({ ...form, maxParticipants: Number(e.target.value) })
+            }
+            required
+          />
+        </div>
+        <div className="mb-3">
+          <select
+            className="form-select"
+            value={form.sessionType}
+            onChange={(e) => setForm({ ...form, sessionType: e.target.value })}
+          >
             <option value="public">Public</option>
             <option value="private">Private</option>
           </select>
         </div>
-        <div><input placeholder="Location (optional)" value={form.location} onChange={e=>setForm({...form, location:e.target.value})} /></div>
-        <div><input placeholder="Creator email (optional)" value={form.creatorEmail} onChange={e=>setForm({...form, creatorEmail:e.target.value})} /></div>
-        <button type="submit">Create</button>
+
+        <button type="submit" className="btn btn-success">
+          Create Session
+        </button>
       </form>
 
+      {error && (
+        <div className="alert alert-danger mt-3">
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
       {result && (
-        <div style={{ marginTop: 12, padding: 12, border: '1px dashed green' }}>
-          <strong>Session created!</strong>
-          <div>ID: {result.id}</div>
-          <div>Management code: <code>{result.managementCode}</code></div>
-          <div>Management URL: <code>{result.managementUrl}</code></div>
-          <div>You must save the management code to edit/delete/manage attendees.</div>
+        <div className="alert alert-success mt-4">
+          <strong>Session created successfully!</strong>
+          <div>
+            <b>Session ID:</b> {result.sessionId}
+          </div>
+          <div>
+            <b>Management URL:</b>{" "}
+            <code>{result.managementUrl}</code>
+          </div>
+          <small className="text-muted">
+            Save this URL to manage your session later.
+          </small>
         </div>
       )}
     </div>
