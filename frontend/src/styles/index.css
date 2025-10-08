@@ -1,0 +1,236 @@
+/* ============================
+   GLOBAL STYLES
+============================ */
+body {
+  margin: 0;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: linear-gradient(to bottom right, #eef2ff, #faf5ff, #fff1f2);
+  color: #333;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  color: #1e1e2f;
+}
+
+a {
+  color: #4f46e5;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ============================
+   PAGE LAYOUT
+============================ */
+.session-page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+.session-card {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 800px;
+}
+
+.session-list-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.session-list-header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+.session-list-header p {
+  color: #666;
+}
+
+.session-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+/* ============================
+   BUTTONS
+============================ */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: 0.25s;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.session-create-btn {
+  background-color: #4f46e5;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.session-create-btn:hover {
+  background-color: #4338ca;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.btn-join {
+  width: 100%;
+  background-color: #4f46e5;
+  color: white;
+  padding: 0.8rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-join:hover {
+  background-color: #4338ca;
+}
+
+.btn-leave {
+  width: 100%;
+  background-color: #dc2626;
+  color: white;
+  padding: 0.8rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-leave:hover {
+  background-color: #b91c1c;
+}
+
+/* ============================
+   FORMS
+============================ */
+.form-group {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.form-group input,
+.form-group textarea {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+/* ============================
+   SESSION CARDS
+============================ */
+.session-list-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.session-list-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #c7d2fe;
+}
+
+.session-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.session-card-badge {
+  background-color: #eef2ff;
+  color: #4f46e5;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.85rem;
+}
+
+.session-card-limit {
+  font-weight: 600;
+}
+
+.session-card-info {
+  margin-top: 1rem;
+  color: #555;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.session-card-info svg {
+  vertical-align: middle;
+}
+
+/* ============================
+   CODES & BOXES
+============================ */
+.code-box {
+  background: #f3f4f6;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  word-break: break-all;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 0.5rem;
+}

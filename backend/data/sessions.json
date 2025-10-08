@@ -1,0 +1,103 @@
+[
+  {
+    "id": "9c4c0284-5af3-4f9d-8b61-021c09a4d0a9",
+    "title": "Board Game Night",
+    "description": "Bring your favourite board games or try new ones! All skill levels welcome",
+    "date": "2025-10-18",
+    "time": "18:30",
+    "maxParticipants": 12,
+    "type": "public",
+    "attendees": [
+      {
+        "id": "582ddc7b-4a47-4b47-b702-e1d18000f008",
+        "code": "q4b3dp5i",
+        "name": "Anonymous"
+      },
+      {
+        "id": "ecda42db-336c-4093-8075-4619d8a7e023",
+        "code": "ihwk6dcw",
+        "name": "Anonymous"
+      },
+      {
+        "id": "d65f7f54-a4ed-4b93-8464-1899fbafce72",
+        "code": "oxm4blaf",
+        "name": "Anonymous"
+      },
+      {
+        "id": "dda69197-0c5f-4c46-85cd-487838bbf32a",
+        "code": "zw59u9uf",
+        "name": "Anonymous"
+      },
+      {
+        "id": "608fdfb9-414e-403c-b528-d3dfc890d56a",
+        "code": "ds1sxv77",
+        "name": "Anonymous"
+      },
+      {
+        "id": "05991e08-7d9f-4ce9-ab08-c6c2dcb1e720",
+        "code": "x7lsz53r",
+        "name": "Anonymous"
+      },
+      {
+        "id": "d8d362ae-8914-4d3f-ab93-c8442b05b802",
+        "code": "asak3m4v",
+        "name": "Anonymous"
+      },
+      {
+        "id": "d002c10f-9f29-41d1-983c-fe7778fda476",
+        "code": "h6i05y53",
+        "name": "Anonymous"
+      },
+      {
+        "id": "b9a6f936-e76b-43d6-b134-780f16d3bf79",
+        "code": "43pc0amb",
+        "name": "Anonymous"
+      },
+      {
+        "id": "941606e0-30e6-4c0c-81c3-c8ba53333f25",
+        "code": "sgci5qde",
+        "name": "achini"
+      }
+    ],
+    "managementCode": "0px2mia5"
+  },
+  {
+    "id": "852c24f6-7a59-4f9a-9a60-61f83987aaf3",
+    "title": "caroom",
+    "description": "let's play",
+    "date": "2025-10-14",
+    "time": "17:20",
+    "maxParticipants": 4,
+    "type": "private",
+    "attendees": [
+      {
+        "id": "68571ccb-8f55-4e06-a626-3e7ba87a1787",
+        "code": "f2p73k9l",
+        "name": "Anonymous"
+      }
+    ],
+    "managementCode": "9e23gml6"
+  },
+  {
+    "id": "4ae6f70e-10bb-4190-8545-6440abb0a1f4",
+    "title": "caroom",
+    "description": "let's enjoy in the evening",
+    "date": "2025-10-29",
+    "time": "18:30",
+    "maxParticipants": 10,
+    "type": "public",
+    "attendees": [
+      {
+        "id": "2cc6c94a-6bf1-462f-8c5b-50b4823bb57a",
+        "code": "x09nd3ph",
+        "name": "Anonymous"
+      },
+      {
+        "id": "b5f9c192-ed85-4464-ba29-bb9468889a58",
+        "code": "zuc5f8x3",
+        "name": "hiruni"
+      }
+    ],
+    "managementCode": "h5ymmgh9"
+  }
+]

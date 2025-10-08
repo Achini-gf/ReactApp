@@ -1,33 +1,22 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route,NavLink } from 'react-router-dom';
-import './App.css';
-
-import AllSessions from './pages/AllSessions';
-import CreateSession from './pages/CreateSession';
-import SessionDetails from './pages/SessionDetails';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import SessionList from "./pages/SessionList";
+import CreateSession from "./pages/CreateSession";
+import SessionDetail from "./pages/SessionDetail";
+import "./styles/index.css";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <div className="app-container">
-        <h1>🎨 Hobby Sessions</h1>
-        {/* Navigation Bar */}
-        <nav className="navbar">
-          <NavLink to="/" end className={({ isActive }) => isActive ? "active" : ""}>
-            All Sessions
-          </NavLink>
-          <NavLink to="/create" className={({ isActive }) => isActive ? "active" : ""}>
-            Create Session
-          </NavLink>
-        </nav>
-
-        {/* Page Routes */}
-        <Routes>
-          <Route path="/" element={<AllSessions />} />
-          <Route path="/create" element={<CreateSession />} />
-          <Route path="/session/:id" element={<SessionDetails />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <Router>
+      <Routes>
+        <Route path="/" element={<SessionList />} />
+        <Route path="/create" element={<CreateSession />} />
+        <Route path="/session/:id" element={<SessionDetail />} />
+        <Route
+          path="/session/:id/manage"
+          element={<SessionDetail isManage={true} />}
+        />
+      </Routes>
+    </Router>
   );
 }

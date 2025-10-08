@@ -1,132 +1,140 @@
-// --- CreateSession.jsx ---
-// Form to create a new session (public/private) and show management info
-
 import React, { useState } from "react";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000";
+import { useNavigate } from "react-router-dom";
+import { Globe, Lock } from "lucide-react";
+import { createSession } from "../services/api";
 
 export default function CreateSession() {
-  const [form, setForm] = useState({
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
     title: "",
     description: "",
     date: "",
     time: "",
-    maxParticipants: 10,
-    sessionType: "public",
+    maxParticipants: "",
+    type: "public",
   });
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const [managementCode, setManagementCode] = useState(null);
+  const [error, setError] = useState("");
 
-  async function onSubmit(e) {
-    e.preventDefault();
-    setError(null);
-    setResult(null);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
+  const handleSubmit = async () => {
     try {
-      const res = await fetch(`${API}/session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Error creating session");
-      setResult(data);
+      setError("");
+      const res = await createSession(formData);
+      setManagementCode(res.managementCode);
+      setTimeout(() => navigate(`/session/${res.id}`), 3000);
     } catch (err) {
-      setError(err.message);
+      setError("Failed to create session");
     }
+  };
+
+  if (managementCode) {
+    return (
+      <div className="session-page" style={{ textAlign: "center" }}>
+        <div className="session-card" style={{ padding: "2rem" }}>
+          <h2>Session Created!</h2>
+          <p>Save your management code:</p>
+          <div className="code-box">{managementCode}</div>
+          <p>Redirecting to session...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mt-4">
-      <h2>Create Session</h2>
-      <form onSubmit={onSubmit} className="mt-3">
-        <div className="mb-2">
+    <div className="session-page">
+      <div className="session-card" style={{ maxWidth: "600px", margin: "0 auto" }}>
+        <button onClick={() => navigate("/")} className="btn-back">
+          ← Back to Sessions
+        </button>
+        <h2>Create New Session</h2>
+        {error && <p style={{ color: "red" }}>{error}</p>}
+
+        <div className="form-group">
+          <label>Title</label>
           <input
-            className="form-control"
-            placeholder="Title"
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            required
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
           />
         </div>
-        <div className="mb-2">
+
+        <div className="form-group">
+          <label>Description</label>
           <textarea
-            className="form-control"
-            placeholder="Description"
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
           />
         </div>
-        <div className="row mb-2">
-          <div className="col">
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>Date</label>
             <input
               type="date"
-              className="form-control"
-              value={form.date}
-              onChange={(e) => setForm({ ...form, date: e.target.value })}
-              required
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
             />
           </div>
-          <div className="col">
+          <div className="form-group">
+            <label>Time</label>
             <input
               type="time"
-              className="form-control"
-              value={form.time}
-              onChange={(e) => setForm({ ...form, time: e.target.value })}
-              required
+              name="time"
+              value={formData.time}
+              onChange={handleChange}
             />
           </div>
         </div>
-        <div className="mb-2">
+
+        <div className="form-group">
+          <label>Max Participants</label>
           <input
             type="number"
-            className="form-control"
+            name="maxParticipants"
+            value={formData.maxParticipants}
+            onChange={handleChange}
             min="1"
-            value={form.maxParticipants}
-            onChange={(e) =>
-              setForm({ ...form, maxParticipants: Number(e.target.value) })
-            }
-            required
           />
         </div>
-        <div className="mb-3">
-          <select
-            className="form-select"
-            value={form.sessionType}
-            onChange={(e) => setForm({ ...form, sessionType: e.target.value })}
-          >
-            <option value="public">Public</option>
-            <option value="private">Private</option>
-          </select>
+
+        <div className="form-group">
+          <label>Type</label>
+          <div>
+            <label>
+              <input
+                type="radio"
+                name="type"
+                value="public"
+                checked={formData.type === "public"}
+                onChange={handleChange}
+              />
+              <Globe size={14} /> Public
+            </label>
+            <label style={{ marginLeft: "20px" }}>
+              <input
+                type="radio"
+                name="type"
+                value="private"
+                checked={formData.type === "private"}
+                onChange={handleChange}
+              />
+              <Lock size={14} /> Private
+            </label>
+          </div>
         </div>
 
-        <button type="submit" className="btn btn-success">
+        <button onClick={handleSubmit} className="btn-join">
           Create Session
         </button>
-      </form>
-
-      {error && (
-        <div className="alert alert-danger mt-3">
-          <strong>Error:</strong> {error}
-        </div>
-      )}
-
-      {result && (
-        <div className="alert alert-success mt-4">
-          <strong>Session created successfully!</strong>
-          <div>
-            <b>Session ID:</b> {result.sessionId}
-          </div>
-          <div>
-            <b>Management URL:</b>{" "}
-            <code>{result.managementUrl}</code>
-          </div>
-          <small className="text-muted">
-            Save this URL to manage your session later.
-          </small>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
