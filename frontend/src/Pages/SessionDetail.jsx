@@ -126,23 +126,27 @@ export default function SessionDetail({ isManage = false }) {
     }
   };
 
-  const handleRemoveAttendee = async (attendeeCode) => {
-    if (!managementCode) return;
-    const confirmRemove = window.confirm("Remove this attendee?");
-    if (!confirmRemove) return;
+ const handleRemoveAttendee = async (attendeeId) => {
+  if (!managementCode) return;
+  const confirmRemove = window.confirm("Remove this attendee?");
+  if (!confirmRemove) return;
 
-    try {
-      await fetch(`http://localhost:5000/api/sessions/${id}/attendees`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ managementCode, attendeeCode }),
-      });
-      const updated = await getSession(id);
-      setSession(updated);
-    } catch (err) {
-      alert("Failed to remove attendee");
-    }
-  };
+  try {
+    const res = await fetch(`http://localhost:5000/api/sessions/${id}/attendees/${attendeeId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ managementCode }),
+    });
+
+    if (!res.ok) throw new Error("Failed to remove attendee");
+
+    // ✅ Refresh updated session list from backend
+    const updated = await getSession(id);
+    setSession(updated);
+  } catch (err) {
+    alert("Failed to remove attendee");
+  }
+};
 
   if (loading)
     return (
@@ -356,7 +360,7 @@ export default function SessionDetail({ isManage = false }) {
                 </div>
                 {managementCode && (
                   <button
-                    onClick={() => handleRemoveAttendee(a.code)}
+                    onClick={() => handleRemoveAttendee(a.id)}
                     style={{
                       border: "none",
                       background: "none",

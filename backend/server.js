@@ -20,10 +20,17 @@ function generateCode() {
 // ROUTES
 // ============================
 
-// Get all sessions
+// Get all PUBLIC sessions only (hide private ones)
 app.get("/api/sessions", (req, res) => {
-  res.json(sessions);
+  const publicSessions = sessions
+    .filter((s) => s.type === "public")
+    .map((s) => ({
+      ...s,
+      currentParticipants: s.attendees.length, // ✅ dynamically count attendees
+    }));
+  res.json(publicSessions);
 });
+
 
 // Get one session
 app.get("/api/sessions/:id", (req, res) => {
