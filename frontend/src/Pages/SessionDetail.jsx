@@ -9,6 +9,7 @@ import {
   UserCheck,
   UserX,
   Trash2,
+  XCircle,
 } from "lucide-react";
 import {
   getSession,
@@ -16,6 +17,49 @@ import {
   leaveSession,
   deleteSession,
 } from "../services/api";
+
+// ✅ Reusable show/hide box
+function CodeBox({ label, code }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div
+      style={{
+        border: "1px solid #e5e7eb",
+        borderRadius: "8px",
+        padding: "10px 14px",
+        marginBottom: "10px",
+        backgroundColor: "#fafafa",
+      }}
+    >
+      <div
+        onClick={() => setShow(!show)}
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          cursor: "pointer",
+          fontWeight: 600,
+        }}
+      >
+        <span>{label}</span>
+        <span style={{ color: "#4f46e5" }}>{show ? "Hide" : "Show"}</span>
+      </div>
+      {show && (
+        <div
+          style={{
+            marginTop: "8px",
+            background: "#f3f4f6",
+            padding: "8px",
+            borderRadius: "6px",
+            fontFamily: "monospace",
+            wordBreak: "break-all",
+          }}
+        >
+          {code}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function SessionDetail({ isManage = false }) {
   const { id } = useParams();
@@ -28,7 +72,6 @@ export default function SessionDetail({ isManage = false }) {
   const [attendanceCode, setAttendanceCode] = useState(null);
   const [error, setError] = useState("");
 
-  // Fetch session details
   useEffect(() => {
     const fetchSession = async () => {
       try {
@@ -43,7 +86,6 @@ export default function SessionDetail({ isManage = false }) {
     fetchSession();
   }, [id]);
 
-  // Join session
   const handleJoin = async (name) => {
     try {
       const res = await joinSession(id, name);
@@ -55,7 +97,6 @@ export default function SessionDetail({ isManage = false }) {
     }
   };
 
-  // Leave session
   const handleLeave = async () => {
     if (!attendanceCode) return;
     try {
@@ -68,52 +109,93 @@ export default function SessionDetail({ isManage = false }) {
     }
   };
 
-  // Delete session (admin)
+  // ✅ Delete session (top-right)
   const handleDelete = async () => {
     if (!managementCode) return;
-    if (window.confirm("Are you sure you want to delete this session?")) {
-      try {
-        await deleteSession(id, managementCode);
-        navigate("/");
-      } catch {
-        setError("Failed to delete session");
-      }
+    const confirmDelete = window.confirm(
+      "Are you sure you want to permanently delete this session?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await deleteSession(id, managementCode);
+      alert("Session deleted successfully!");
+      navigate("/");
+    } catch (err) {
+      alert("Failed to delete session");
+    }
+  };
+
+  const handleRemoveAttendee = async (attendeeCode) => {
+    if (!managementCode) return;
+    const confirmRemove = window.confirm("Remove this attendee?");
+    if (!confirmRemove) return;
+
+    try {
+      await fetch(`http://localhost:5000/api/sessions/${id}/attendees`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ managementCode, attendeeCode }),
+      });
+      const updated = await getSession(id);
+      setSession(updated);
+    } catch (err) {
+      alert("Failed to remove attendee");
     }
   };
 
   if (loading)
     return (
-      <div className="session-page" style={{ textAlign: "center" }}>
-        <p>Loading session...</p>
+      <div style={{ textAlign: "center", padding: "50px" }}>
+        Loading session...
       </div>
     );
 
   if (error || !session)
     return (
-      <div className="session-page" style={{ textAlign: "center" }}>
-        <p style={{ color: "red" }}>{error}</p>
+      <div style={{ textAlign: "center", padding: "50px", color: "red" }}>
+        {error}
       </div>
     );
 
-  const attendeeCount = session.attendees ? session.attendees.length : 0;
+  const attendeeCount = session.attendees?.length || 0;
 
   return (
-    <div className="session-page">
+    <div className="session-page" style={{ position: "relative" }}>
+      {/* ✅ Delete Button (fixed top-right corner in management mode) */}
+      {managementCode && (
+        <button
+          onClick={handleDelete}
+          style={{
+            position: "fixed",
+            top: "20px",
+            right: "20px",
+            backgroundColor: "#ef4444",
+            color: "white",
+            border: "none",
+            padding: "10px 16px",
+            borderRadius: "8px",
+            fontWeight: "600",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            zIndex: 1000,
+          }}
+        >
+          <Trash2 size={16} /> Delete Session
+        </button>
+      )}
+
       <div
         className="session-card"
-        style={{
-          maxWidth: "700px",
-          margin: "0 auto",
-          paddingBottom: "2rem",
-        }}
+        style={{ maxWidth: "700px", margin: "0 auto", paddingTop: "60px" }}
       >
         <button onClick={() => navigate("/")} className="btn-back">
           ← Back to Sessions
         </button>
 
-        {/* Header */}
         <div
-          className="session-header"
           style={{
             background: "linear-gradient(90deg, #4f46e5, #7c3aed)",
             color: "white",
@@ -143,194 +225,152 @@ export default function SessionDetail({ isManage = false }) {
               {session.type === "public" ? <Globe size={14} /> : <Lock size={14} />}
               {session.type === "public" ? "Public" : "Private"}
             </span>
-
-            {isManage && managementCode && (
-              <button
-                onClick={handleDelete}
-                style={{
-                  background: "rgba(255,255,255,0.2)",
-                  border: "none",
-                  borderRadius: "6px",
-                  padding: "6px 10px",
-                  cursor: "pointer",
-                  color: "white",
-                }}
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
           </div>
 
-          <h1
-            style={{ marginTop: "10px", fontSize: "1.8rem", fontWeight: "700" }}
-          >
+          <h1 style={{ marginTop: "10px", fontSize: "1.8rem", fontWeight: "700" }}>
             {session.title}
           </h1>
           <p style={{ opacity: 0.9 }}>{session.description}</p>
         </div>
 
-        {/* Info section */}
-        <div className="session-info" style={{ marginBottom: "1.5rem" }}>
+        <div className="session-info">
           <div className="info-row">
             <Calendar size={18} />
-            <span style={{ marginLeft: "6px" }}>
-              {new Date(session.date).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </span>
+            <span>{new Date(session.date).toLocaleDateString()}</span>
           </div>
           <div className="info-row">
             <Clock size={18} />
-            <span style={{ marginLeft: "6px" }}>{session.time}</span>
+            <span>{session.time}</span>
           </div>
           <div className="info-row">
             <Users size={18} />
-            <span style={{ marginLeft: "6px" }}>
+            <span>
               {attendeeCount}/{session.maxParticipants} attending
             </span>
           </div>
         </div>
 
-        {/* Join / Leave buttons */}
-        <div className="session-actions" style={{ marginBottom: "1rem" }}>
-         {!attendanceCode ? (
-  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-    <input
-      type="text"
-      placeholder="Enter your name"
-      id="attendeeName"
-      style={{
-        padding: "0.75rem",
-        borderRadius: "8px",
-        border: "1px solid #d1d5db",
-        fontSize: "1rem",
-      }}
-    />
-    <button
-      onClick={() => {
-        const name = document.getElementById("attendeeName").value.trim();
-        if (!name) return alert("Please enter your name before joining!");
-        handleJoin(name);
-      }}
-      disabled={attendeeCount >= session.maxParticipants}
-      style={{
-        width: "100%",
-        backgroundColor:
-          attendeeCount >= session.maxParticipants ? "#9ca3af" : "#4f46e5",
-        color: "white",
-        padding: "0.8rem",
-        borderRadius: "8px",
-        border: "none",
-        fontWeight: "600",
-        cursor:
-          attendeeCount >= session.maxParticipants ? "not-allowed" : "pointer",
-      }}
-    >
-      <UserCheck size={18} style={{ marginRight: "6px" }} />
-      {attendeeCount >= session.maxParticipants ? "Session Full" : "I'm Going"}
-    </button>
-  </div>
-) : (
-
+        {!attendanceCode ? (
+          <div style={{ marginTop: "20px" }}>
+            <input
+              type="text"
+              placeholder="Enter your name"
+              id="attendeeName"
+              style={{
+                padding: "10px",
+                borderRadius: "8px",
+                border: "1px solid #d1d5db",
+                marginBottom: "8px",
+                width: "100%",
+              }}
+            />
             <button
-              onClick={handleLeave}
-              className="btn-leave"
+              onClick={() => {
+                const name = document.getElementById("attendeeName").value.trim();
+                if (!name) return alert("Please enter your name before joining!");
+                handleJoin(name);
+              }}
+              disabled={attendeeCount >= session.maxParticipants}
               style={{
                 width: "100%",
-                backgroundColor: "#dc2626",
+                backgroundColor:
+                  attendeeCount >= session.maxParticipants ? "#9ca3af" : "#4f46e5",
                 color: "white",
-                padding: "0.8rem",
+                padding: "12px",
                 borderRadius: "8px",
                 border: "none",
                 fontWeight: "600",
-                cursor: "pointer",
+                cursor:
+                  attendeeCount >= session.maxParticipants ? "not-allowed" : "pointer",
               }}
             >
-              <UserX size={18} style={{ marginRight: "6px" }} /> Leave Session
+              <UserCheck size={18} style={{ marginRight: "6px" }} />
+              {attendeeCount >= session.maxParticipants ? "Session Full" : "I'm Going"}
             </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleLeave}
+            style={{
+              width: "100%",
+              backgroundColor: "#ef4444",
+              color: "white",
+              padding: "12px",
+              borderRadius: "8px",
+              border: "none",
+              fontWeight: "600",
+              marginTop: "10px",
+            }}
+          >
+            <UserX size={18} style={{ marginRight: "6px" }} /> Leave Session
+          </button>
+        )}
+
+        <div style={{ marginTop: "20px" }}>
+          {managementCode && (
+            <CodeBox
+              label="Management Code"
+              code={`/session/${id}?code=${managementCode}`}
+            />
+          )}
+          {attendanceCode && (
+            <CodeBox label="Your Attendance Code" code={attendanceCode} />
           )}
         </div>
 
-        {/* Codes */}
-        {managementCode && (
-          <div
-            className="code-box"
-            style={{
-              background: "#f3f4f6",
-              padding: "10px",
-              borderRadius: "8px",
-              marginBottom: "10px",
-            }}
-          >
-            Management Link: /session/{id}/manage?code={managementCode}
-          </div>
-        )}
-        {attendanceCode && (
-          <div
-            className="code-box"
-            style={{
-              background: "#f3f4f6",
-              padding: "10px",
-              borderRadius: "8px",
-              marginBottom: "10px",
-            }}
-          >
-            Your Code: {attendanceCode}
-          </div>
-        )}
-
-        {/* Attendee list */}
-        <div className="attendee-list" style={{ marginTop: "2rem" }}>
-          <h3
-            style={{
-              fontSize: "1.25rem",
-              fontWeight: "700",
-              marginBottom: "1rem",
-            }}
-          >
+        <div style={{ marginTop: "20px" }}>
+          <h3 style={{ fontWeight: "700", fontSize: "1.2rem", marginBottom: "10px" }}>
             Attendees ({attendeeCount})
           </h3>
-
-          {(!session.attendees || session.attendees.length === 0) ? (
-            <p style={{ color: "#6b7280" }}>No one has joined yet.</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              {session.attendees.map((a, i) => (
-                <div
-                  key={a.id || i}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    background: "#f9fafb",
-                    padding: "0.75rem 1rem",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <div
-                      style={{
-                        width: "36px",
-                        height: "36px",
-                        borderRadius: "50%",
-                        backgroundColor: "#4f46e5",
-                        color: "white",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        fontWeight: "600",
-                      }}
-                    >
-                      {(a.name || "?").charAt(0).toUpperCase()}
-                    </div>
-                    <span style={{ fontWeight: "500" }}>{a.name || "Anonymous"}</span>
+          {session.attendees?.length ? (
+            session.attendees.map((a) => (
+              <div
+                key={a.code}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  backgroundColor: "#f9fafb",
+                  borderRadius: "8px",
+                  padding: "10px 14px",
+                  marginBottom: "6px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      backgroundColor: "#4f46e5",
+                      color: "white",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {a.name ? a.name.charAt(0).toUpperCase() : "?"}
                   </div>
-                  <span style={{ color: "#9ca3af", fontSize: "0.85rem" }}>#{i + 1}</span>
+                  <span style={{ fontWeight: "500" }}>{a.name || "Anonymous"}</span>
                 </div>
-              ))}
-            </div>
+                {managementCode && (
+                  <button
+                    onClick={() => handleRemoveAttendee(a.code)}
+                    style={{
+                      border: "none",
+                      background: "none",
+                      cursor: "pointer",
+                      color: "#ef4444",
+                    }}
+                  >
+                    <XCircle size={18} />
+                  </button>
+                )}
+              </div>
+            ))
+          ) : (
+            <p style={{ color: "#6b7280" }}>No attendees yet</p>
           )}
         </div>
       </div>

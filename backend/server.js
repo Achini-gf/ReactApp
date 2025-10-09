@@ -103,3 +103,18 @@ app.delete("/api/sessions/:id", (req, res) => {
 app.listen(PORT, () =>
   console.log(`✅ Server running on http://localhost:${PORT}`)
 );
+// Remove attendee (for management)
+app.delete("/api/sessions/:id/attendees/:attendeeId", (req, res) => {
+  const { managementCode } = req.body;
+  const session = sessions.find((s) => s.id === req.params.id);
+
+  if (!session) return res.status(404).json({ message: "Session not found" });
+  if (session.managementCode !== managementCode)
+    return res.status(403).json({ message: "Invalid management code" });
+
+  session.attendees = session.attendees.filter(
+    (a) => a.id !== req.params.attendeeId
+  );
+
+  res.json({ message: "Attendee removed" });
+});
