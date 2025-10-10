@@ -46,7 +46,14 @@ export const deleteSession = (id, managementCode) =>
     body: JSON.stringify({ managementCode }),
   });
 
-// remove attendee for management
+// ✅ NEW: Update existing session (Edit feature)
+export const updateSession = (id, data) =>
+  apiCall(`/sessions/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+
+// Remove attendee for management
 export const removeAttendee = (sessionId, attendeeId, managementCode) =>
   apiCall(`/sessions/${sessionId}/attendees/${attendeeId}`, {
     method: "DELETE",

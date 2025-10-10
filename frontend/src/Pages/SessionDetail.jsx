@@ -16,6 +16,7 @@ import {
   joinSession,
   leaveSession,
   deleteSession,
+  updateSession,
 } from "../services/api";
 
 // ✅ Reusable show/hide box
@@ -61,7 +62,7 @@ function CodeBox({ label, code }) {
   );
 }
 
-export default function SessionDetail({ isManage = false }) {
+export default function SessionDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -71,7 +72,10 @@ export default function SessionDetail({ isManage = false }) {
   const [loading, setLoading] = useState(true);
   const [attendanceCode, setAttendanceCode] = useState(null);
   const [error, setError] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({});
 
+  // 🔹 Fetch session details
   useEffect(() => {
     const fetchSession = async () => {
       try {
@@ -86,6 +90,7 @@ export default function SessionDetail({ isManage = false }) {
     fetchSession();
   }, [id]);
 
+  // 🔹 Join session
   const handleJoin = async (name) => {
     try {
       const res = await joinSession(id, name);
@@ -97,6 +102,7 @@ export default function SessionDetail({ isManage = false }) {
     }
   };
 
+  // 🔹 Leave session
   const handleLeave = async () => {
     if (!attendanceCode) return;
     try {
@@ -109,7 +115,7 @@ export default function SessionDetail({ isManage = false }) {
     }
   };
 
-  // ✅ Delete session (top-right)
+  // 🔹 Delete session
   const handleDelete = async () => {
     if (!managementCode) return;
     const confirmDelete = window.confirm(
@@ -121,33 +127,61 @@ export default function SessionDetail({ isManage = false }) {
       await deleteSession(id, managementCode);
       alert("Session deleted successfully!");
       navigate("/");
-    } catch (err) {
+    } catch {
       alert("Failed to delete session");
     }
   };
 
- const handleRemoveAttendee = async (attendeeId) => {
-  if (!managementCode) return;
-  const confirmRemove = window.confirm("Remove this attendee?");
-  if (!confirmRemove) return;
+  // 🔹 Remove attendee (management)
+  const handleRemoveAttendee = async (attendeeId) => {
+    if (!managementCode) return;
+    const confirmRemove = window.confirm("Remove this attendee?");
+    if (!confirmRemove) return;
 
-  try {
-    const res = await fetch(`http://localhost:5000/api/sessions/${id}/attendees/${attendeeId}`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ managementCode }),
-    });
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/sessions/${id}/attendees/${attendeeId}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ managementCode }),
+        }
+      );
 
-    if (!res.ok) throw new Error("Failed to remove attendee");
+      if (!res.ok) throw new Error("Failed to remove attendee");
 
-    // ✅ Refresh updated session list from backend
-    const updated = await getSession(id);
-    setSession(updated);
-  } catch (err) {
-    alert("Failed to remove attendee");
-  }
-};
+      const updated = await getSession(id);
+      setSession(updated);
+    } catch {
+      alert("Failed to remove attendee");
+    }
+  };
 
+  // 🔹 Edit session
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/sessions/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...editData, managementCode }),
+      });
+      if (!res.ok) throw new Error("Failed to update session");
+
+      const updated = await getSession(id);
+      setSession(updated);
+      setIsEditing(false);
+      alert("✅ Session updated successfully!");
+    } catch {
+      alert("Failed to update session");
+    }
+  };
+
+  // Loading and error handling
   if (loading)
     return (
       <div style={{ textAlign: "center", padding: "50px" }}>
@@ -166,29 +200,50 @@ export default function SessionDetail({ isManage = false }) {
 
   return (
     <div className="session-page" style={{ position: "relative" }}>
-      {/* ✅ Delete Button (fixed top-right corner in management mode) */}
+      {/* ✅ Edit & Delete Buttons */}
       {managementCode && (
-        <button
-          onClick={handleDelete}
-          style={{
-            position: "fixed",
-            top: "20px",
-            right: "20px",
-            backgroundColor: "#ef4444",
-            color: "white",
-            border: "none",
-            padding: "10px 16px",
-            borderRadius: "8px",
-            fontWeight: "600",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            zIndex: 1000,
-          }}
-        >
-          <Trash2 size={16} /> Delete Session
-        </button>
+        <>
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            style={{
+              position: "fixed",
+              top: "20px",
+              right: "180px",
+              backgroundColor: "#3b82f6",
+              color: "white",
+              border: "none",
+              padding: "10px 16px",
+              borderRadius: "8px",
+              fontWeight: "600",
+              cursor: "pointer",
+              zIndex: 1000,
+            }}
+          >
+            ✏️ Edit Session
+          </button>
+
+          <button
+            onClick={handleDelete}
+            style={{
+              position: "fixed",
+              top: "20px",
+              right: "20px",
+              backgroundColor: "#ef4444",
+              color: "white",
+              border: "none",
+              padding: "10px 16px",
+              borderRadius: "8px",
+              fontWeight: "600",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              zIndex: 1000,
+            }}
+          >
+            <Trash2 size={16} /> Delete Session
+          </button>
+        </>
       )}
 
       <div
@@ -199,6 +254,7 @@ export default function SessionDetail({ isManage = false }) {
           ← Back to Sessions
         </button>
 
+        {/* ✅ Session header */}
         <div
           style={{
             background: "linear-gradient(90deg, #4f46e5, #7c3aed)",
@@ -208,28 +264,20 @@ export default function SessionDetail({ isManage = false }) {
             marginBottom: "1rem",
           }}
         >
-          <div
+          <span
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
+              background: "rgba(255,255,255,0.2)",
+              padding: "0.4rem 0.8rem",
+              borderRadius: "9999px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              fontSize: "0.9rem",
             }}
           >
-            <span
-              style={{
-                background: "rgba(255,255,255,0.2)",
-                padding: "0.4rem 0.8rem",
-                borderRadius: "9999px",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                fontSize: "0.9rem",
-              }}
-            >
-              {session.type === "public" ? <Globe size={14} /> : <Lock size={14} />}
-              {session.type === "public" ? "Public" : "Private"}
-            </span>
-          </div>
+            {session.type === "public" ? <Globe size={14} /> : <Lock size={14} />}
+            {session.type === "public" ? "Public" : "Private"}
+          </span>
 
           <h1 style={{ marginTop: "10px", fontSize: "1.8rem", fontWeight: "700" }}>
             {session.title}
@@ -237,6 +285,7 @@ export default function SessionDetail({ isManage = false }) {
           <p style={{ opacity: 0.9 }}>{session.description}</p>
         </div>
 
+        {/* ✅ Info section */}
         <div className="session-info">
           <div className="info-row">
             <Calendar size={18} />
@@ -254,6 +303,92 @@ export default function SessionDetail({ isManage = false }) {
           </div>
         </div>
 
+        {/* ✅ Edit form */}
+        {isEditing && (
+          <div
+            style={{
+              backgroundColor: "#f3f4f6",
+              padding: "20px",
+              borderRadius: "12px",
+              marginTop: "20px",
+            }}
+          >
+            <h3 style={{ fontWeight: "700", marginBottom: "10px" }}>Edit Session</h3>
+
+            <div style={{ display: "grid", gap: "10px" }}>
+              <input
+                type="text"
+                name="title"
+                placeholder="Title"
+                value={editData.title ?? session.title}
+                onChange={handleEditChange}
+              />
+              <textarea
+                name="description"
+                placeholder="Description"
+                value={editData.description ?? session.description}
+                onChange={handleEditChange}
+              />
+              <input
+                type="date"
+                name="date"
+                value={editData.date ?? session.date}
+                onChange={handleEditChange}
+              />
+              <input
+                type="time"
+                name="time"
+                value={editData.time ?? session.time}
+                onChange={handleEditChange}
+              />
+              <input
+                type="number"
+                name="maxParticipants"
+                placeholder="Max Participants"
+                value={editData.maxParticipants ?? session.maxParticipants}
+                onChange={handleEditChange}
+              />
+              <select
+                name="type"
+                value={editData.type ?? session.type}
+                onChange={handleEditChange}
+              >
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+
+            <div style={{ marginTop: "15px" }}>
+              <button
+                onClick={handleSaveEdit}
+                style={{
+                  backgroundColor: "#10b981",
+                  color: "white",
+                  border: "none",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                  marginRight: "10px",
+                }}
+              >
+                💾 Save Changes
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                style={{
+                  backgroundColor: "#9ca3af",
+                  color: "white",
+                  border: "none",
+                  padding: "10px 16px",
+                  borderRadius: "8px",
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ Join / Leave logic */}
         {!attendanceCode ? (
           <div style={{ marginTop: "20px" }}>
             <input
@@ -285,11 +420,15 @@ export default function SessionDetail({ isManage = false }) {
                 border: "none",
                 fontWeight: "600",
                 cursor:
-                  attendeeCount >= session.maxParticipants ? "not-allowed" : "pointer",
+                  attendeeCount >= session.maxParticipants
+                    ? "not-allowed"
+                    : "pointer",
               }}
             >
               <UserCheck size={18} style={{ marginRight: "6px" }} />
-              {attendeeCount >= session.maxParticipants ? "Session Full" : "I'm Going"}
+              {attendeeCount >= session.maxParticipants
+                ? "Session Full"
+                : "I'm Going"}
             </button>
           </div>
         ) : (
@@ -310,6 +449,7 @@ export default function SessionDetail({ isManage = false }) {
           </button>
         )}
 
+        {/* ✅ Codes section */}
         <div style={{ marginTop: "20px" }}>
           {managementCode && (
             <CodeBox
@@ -322,14 +462,21 @@ export default function SessionDetail({ isManage = false }) {
           )}
         </div>
 
+        {/* ✅ Attendees */}
         <div style={{ marginTop: "20px" }}>
-          <h3 style={{ fontWeight: "700", fontSize: "1.2rem", marginBottom: "10px" }}>
+          <h3
+            style={{
+              fontWeight: "700",
+              fontSize: "1.2rem",
+              marginBottom: "10px",
+            }}
+          >
             Attendees ({attendeeCount})
           </h3>
           {session.attendees?.length ? (
             session.attendees.map((a) => (
               <div
-                key={a.code}
+                key={a.id}
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
@@ -356,7 +503,9 @@ export default function SessionDetail({ isManage = false }) {
                   >
                     {a.name ? a.name.charAt(0).toUpperCase() : "?"}
                   </div>
-                  <span style={{ fontWeight: "500" }}>{a.name || "Anonymous"}</span>
+                  <span style={{ fontWeight: "500" }}>
+                    {a.name || "Anonymous"}
+                  </span>
                 </div>
                 {managementCode && (
                   <button

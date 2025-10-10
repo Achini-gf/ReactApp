@@ -110,6 +110,27 @@ app.delete("/api/sessions/:id", (req, res) => {
 app.listen(PORT, () =>
   console.log(`✅ Server running on http://localhost:${PORT}`)
 );
+
+app.put("/api/sessions/:id", (req, res) => {
+  const { managementCode, title, description, date, time, maxParticipants, type } = req.body;
+  const session = sessions.find((s) => s.id === req.params.id);
+
+  if (!session) return res.status(404).json({ message: "Session not found" });
+  if (session.managementCode !== managementCode)
+    return res.status(403).json({ message: "Invalid management code" });
+
+  //  Update fields
+  if (title) session.title = title;
+  if (description) session.description = description;
+  if (date) session.date = date;
+  if (time) session.time = time;
+  if (maxParticipants) session.maxParticipants = Number(maxParticipants);
+  if (type) session.type = type;
+
+  res.json({ message: "Session updated successfully", session });
+});
+
+
 // Remove attendee (for management)
 app.delete("/api/sessions/:id/attendees/:attendeeId", (req, res) => {
   const { managementCode } = req.body;
