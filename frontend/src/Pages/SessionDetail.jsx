@@ -139,9 +139,9 @@ export default function SessionDetail() {
     if (!confirmRemove) return;
 
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/sessions/${id}/attendees/${attendeeId}`,
-        {
+      const API_URL = import.meta.env.VITE_API_URL;
+const res = await fetch(`${API_URL}/sessions/${id}/attendees/${attendeeId}`, {
+
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ managementCode }),
@@ -165,7 +165,9 @@ export default function SessionDetail() {
 
   const handleSaveEdit = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/sessions/${id}`, {
+      const API_URL = import.meta.env.VITE_API_URL;
+const res = await fetch(`${API_URL}/sessions/${id}`, {
+
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...editData, managementCode }),
