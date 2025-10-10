@@ -1,8 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import SessionList from "./pages/SessionList";
-import CreateSession from "./pages/CreateSession";
-import SessionDetail from "./pages/SessionDetail";
+import SessionList from "./Pages/SessionList";
+import CreateSession from "./Pages/CreateSession";
+import SessionDetail from "./Pages/SessionDetail";
 import "./styles/index.css";
 
 export default function App() {
